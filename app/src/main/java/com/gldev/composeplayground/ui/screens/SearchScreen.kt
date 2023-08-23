@@ -6,6 +6,7 @@ import androidx.navigation.NavHostController
 
 @Composable
 fun SearchScreen(navController: NavHostController) {
-    Text(text = "Search")
+    //Text(text = "Search")
 
+    com.gldev.composeplayground.ui.homepage.HomeScreen()
 }
