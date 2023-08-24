@@ -154,9 +154,9 @@ fun ViewPromo(
 
         HorizontalPager(
             state = pagerState,
-            pageSpacing = 8.dp,
+            pageSpacing = 4.dp,
             pageCount = pageCount,
-            contentPadding = PaddingValues(horizontal = 22.dp)
+            contentPadding = PaddingValues(horizontal = 32.dp)
         ) { page ->
             Image(
                 modifier = Modifier
