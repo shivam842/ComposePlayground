@@ -1,14 +1,16 @@
 package com.gldev.composeplayground.ui.homepage
 
 import android.annotation.SuppressLint
-import android.graphics.drawable.shapes.Shape
+import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.interaction.collectIsDraggedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -16,23 +18,24 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.Font
@@ -41,10 +44,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.viewinterop.AndroidView
 import com.gldev.composeplayground.R
-import com.gldev.composeplayground.getScreenWidthDp
-import com.gldev.composeplayground.getScreenWidthPx
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import okhttp3.Response
 
 @Preview
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter", "UnusedMaterialScaffoldPaddingParameter")
@@ -64,12 +67,12 @@ fun HomeScreen() {
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun HomeContent() {
     ViewSearch()
     ViewPromo()
 }
-
 
 @Composable
 fun ViewSearch() {
@@ -120,44 +123,51 @@ fun ViewSearch() {
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun ViewPromo() {
-    val pagerState = rememberPagerState(0)
-    val cardWidth = getScreenWidthDp()
+fun ViewPromo(
+    pageCount: Int = 10,
+    pagerState: PagerState = rememberPagerState(0),
+    autoScrollDuration: Long = 3000L
+) {
 
     Spacer(modifier = Modifier.height(8.dp))
 
-    HorizontalPager(
-        state = pagerState,
-        pageCount = 10,
-        modifier = Modifier.fillMaxWidth()
-    ) { page ->
-        // Our page content
-        Image(
-            modifier = Modifier
-                .width(cardWidth)
-                .height(177.dp),
-            painter = painterResource(id = R.drawable.ic_banner),
-            contentDescription = " "
-        )
-    }
-
-    /*LazyRow(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(16.dp, Alignment.Start),
-        state = listState,
+    //View HorizontalView
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(200.dp)
     ) {
-        items(count = 10) { index ->
+        val isDragged by pagerState.interactionSource.collectIsDraggedAsState()
+        if (isDragged.not()) {
+            with(pagerState) {
+                var currentPageKey by remember { mutableStateOf(0) }
+                LaunchedEffect(key1 = currentPageKey) {
+                    launch {
+                        delay(timeMillis = autoScrollDuration)
+                        val nextPage = (currentPage + 1).mod(pageCount)
+                        animateScrollToPage(page = nextPage)
+                        currentPageKey = nextPage
+                    }
+                }
+            }
+        }
+
+        HorizontalPager(
+            state = pagerState,
+            pageSpacing = 8.dp,
+            pageCount = pageCount,
+            contentPadding = PaddingValues(horizontal = 22.dp)
+        ) { page ->
             Image(
                 modifier = Modifier
-                    .width(304.dp)
-                    .height(177.dp),
+                    .fillMaxSize(),
                 painter = painterResource(id = R.drawable.ic_banner),
                 contentDescription = " "
             )
         }
-    }*/
+    }
 
-
+    //View Indicator
     LazyRow(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally),
@@ -165,12 +175,15 @@ fun ViewPromo() {
         items(count = 10) { index ->
 
             val sWidth = if (index == pagerState.currentPage) 20.dp else 12.dp
-            val color = if (index == pagerState.currentPage) Color.DarkGray else Color.Gray
+            val color =
+                if (index == pagerState.currentPage) Color(0xFF2798FF.toInt()) else Color(0x86868633.toInt())
             Spacer(
                 modifier = Modifier
                     .width(sWidth)
                     .height(2.dp)
+                    .clip(RoundedCornerShape(0.5.dp))
                     .background(color)
+                    .animateContentSize()
             )
         }
     }
