@@ -176,7 +176,9 @@ fun ViewPromo(
 
             val sWidth = if (index == pagerState.currentPage) 20.dp else 12.dp
             val color =
-                if (index == pagerState.currentPage) Color(0xFF2798FF.toInt()) else Color(0x86868633.toInt())
+                if (index == pagerState.currentPage) Color(0xFF2798FF.toInt())
+                else Color(0x86868633.toInt())
+
             Spacer(
                 modifier = Modifier
                     .width(sWidth)
